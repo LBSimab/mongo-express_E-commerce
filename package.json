@@ -1,0 +1,28 @@
+{
+  "name": "mongo-express-ecommerce",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LBSimab/mongo-express_E-commerce.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/LBSimab/mongo-express_E-commerce/issues"
+  },
+  "homepage": "https://github.com/LBSimab/mongo-express_E-commerce#readme",
+  "dependencies": {
+    "eslint": "^9.35.0",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.1",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.2"
+  }
+}
