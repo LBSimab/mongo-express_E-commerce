@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/LBSimab/mongo-express_E-commerce#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "eslint": "^9.35.0",
     "express": "^5.1.0",
     "mongoose": "^8.18.1",
