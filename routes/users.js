@@ -5,13 +5,20 @@ const joi = require("joi");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/users");
+const authMiddleWare = require("../middleware/auth");
 const createuserschema = joi.object({
   name: joi.string().min(3).required(),
   email: joi.string().email().required(),
   password: joi.string().min(6).required(),
   adress: joi.string().min(5).required(),
 });
-router.post("/", async (req, res) => {
+
+router.get("/", authMiddleWare, async (req, res) => {
+  const user = await User.findById(req.user._id).select("-password");
+  res.json(user);
+});
+
+router.post("/register", async (req, res) => {
   const { name, email, password, adress } = req.body;
   //JoI VALIDATION
 
