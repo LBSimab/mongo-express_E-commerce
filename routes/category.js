@@ -3,8 +3,32 @@ const router = express.Router();
 const Category = require("../models/category");
 const multer = require("multer");
 
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = [`image/jpeg`, `image/png`, `image/gif`];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("inavlid file type. Only JPEG,PNG,GIF are allowed!"), false);
+  }
+};
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "upload/category/");
+  },
+  filename: (req, file, cb) => {
+    const timestamps = Date.now();
+    const originalName = file.originalname
+      .replace(/\s+/g, `-`)
+      .replace(/[^a-zA-Z0-9.-]/g, "");
+    cb(null, `${timestamps}-${originalName}`);
+  },
+});
 const upload = multer({
-  dest: "upload/category/",
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024,
+  },
 });
 
 router.post("/", upload.single("icon"), async (req, res) => {
