@@ -1,6 +1,7 @@
 require("dotenv").config();
 require("./config/passport");
 const express = require("express");
+const productsRoutes = require("./routes/products");
 const app = express();
 const userRoutes = require("./routes/users");
 const categoryRoutes = require("./routes/category");
@@ -24,6 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/upload/categories", express.static("upload/category"));
 //routes
 app.use("/api/users", userRoutes);
+app.use("/api/products", productsRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/auth", authRoutes);
 
