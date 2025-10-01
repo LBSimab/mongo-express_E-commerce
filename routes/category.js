@@ -48,4 +48,9 @@ router.post("/", upload.single("icon"), async (req, res) => {
     category: newCategory,
   });
 });
+
+router.get("/", async (req, res) => {
+  const categories = await Category.find().sort("name");
+  res.json(categories);
+});
 module.exports = router;

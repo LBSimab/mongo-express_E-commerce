@@ -20,7 +20,8 @@ mongoose
 //using built-in middleware for requests and responses
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+///static files i.e images
+app.use("/upload/categories", express.static("upload/category"));
 //routes
 app.use("/api/users", userRoutes);
 app.use("/api/category", categoryRoutes);
