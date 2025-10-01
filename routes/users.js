@@ -27,22 +27,30 @@ router.post("/register", async (req, res) => {
   if (joinvalidation.error) {
     return res.status(400).json(joinvalidation.error.details[0].message);
   }
-
+  //check if the user exist returns user already exist !!
   const user = await User.findOne({ email: email });
 
   if (user) {
     return res.status(400).json({ message: "the user already exist" });
   }
+
+  //getting passwored hashed so no one except use knows it and saving it with other stuff
   const hashedPass = await bcrypt.hash(password, 10);
 
   const newUser = new User({ name, email, password: hashedPass, adress });
-  const userData = await newUser.save();
-
-  const token = generateToken({ _id: user._id, name: user.name });
-
-  res.status(201).json(token, userData);
+  await newUser.save();
+  //creating json token with the proper data we need
+  const token = generateToken({
+    _id: newUser._id,
+    name: newUser.name,
+    role: newUser.role,
+  });
+  //returing the token and the data of the user
+  // i realy shouldnt return the user data like this but its just dev checking
+  res.status(201).json(token, newUser);
 });
 router.post("/login", async (req, res) => {
+  //first we catch credentials and check email if it exist were gud if not we resend wrong cred
   const cred = req.body;
   const user = await User.findOne({ email: cred.email });
   if (!user) {
@@ -52,7 +60,13 @@ router.post("/login", async (req, res) => {
   if (!validcred) {
     return res.status(401).json({ message: "wrong credentials" });
   }
-  const token = generateToken({ _id: user._id, name: user.name });
+
+  //if everything went find we genrate token for the user with proper data
+  const token = generateToken({
+    _id: user._id,
+    name: user.name,
+    role: user.role,
+  });
 
   res.status(200).json(token);
 });

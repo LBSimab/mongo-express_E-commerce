@@ -40,7 +40,7 @@ router.get(
       await user.save();
     }
     const token = jwt.sign(
-      { _id: user._id, name: user.name },
+      { _id: user._id, name: user.name, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "2h" }
     );
