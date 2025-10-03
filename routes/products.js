@@ -60,10 +60,25 @@ router.post(
 );
 //get all products
 router.get("/", async (req, res) => {
-  const products = await Product.find().select(
-    "-description -seller -category -__v"
-  );
-  res.json(products);
+  const products = await Product.find()
+    .select("-description -seller -category -__v")
+    .lean();
+
+  const updatedProducts = products.map((product) => {
+    const numberofReviews = product.review.length;
+    const sumOfRatings = product.review.reduce(
+      (sum, review) => sum + review.rating,
+      0
+    );
+    const averageRating = sumOfRatings / (numberofReviews || 1);
+    return {
+      ...product,
+      images: product.images[0],
+      review: { numberofReviews, averageRating },
+    };
+  });
+
+  res.json(updatedProducts);
 });
 
 module.exports = router;
