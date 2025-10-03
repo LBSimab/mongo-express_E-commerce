@@ -31,7 +31,7 @@ const upload = multer({
     fileSize: 2 * 1024 * 1024,
   },
 });
-
+//create products
 router.post(
   "/",
   authMiddleWare,
@@ -58,4 +58,12 @@ router.post(
     res.status(201).json(newProduct);
   }
 );
+//get all products
+router.get("/", async (req, res) => {
+  const products = await Product.find().select(
+    "-description -seller -category -__v"
+  );
+  res.json(products);
+});
+
 module.exports = router;
