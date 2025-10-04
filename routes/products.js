@@ -4,6 +4,7 @@ const multer = require("multer");
 const router = express.Router();
 const checkRole = require("../middleware/checkRole");
 const Product = require("../models/products");
+const Category = require("../models/category");
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [`image/jpeg`, `image/png`, `image/gif`];
   if (allowedTypes.includes(file.mimetype)) {
@@ -60,10 +61,25 @@ router.post(
 );
 //get all products
 router.get("/", async (req, res) => {
-  const products = await Product.find()
+  const page = parseInt(req.query.page) || 1;
+  const perpage = parseInt(req.query.perpage) || 8;
+  const querycategory = req.query.category || null;
+  let query = {};
+  if (querycategory) {
+    const category = await Category.findOne({ name: querycategory });
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
+    }
+    query.category = category._id;
+  }
+  const products = await Product.find(query)
     .select("-description -seller -category -__v")
+    .skip((page - 1) * perpage)
+    .limit(perpage)
     .lean();
 
+  //we dont have reviews yet because of incompleted project so....
+  //we're going to add the logic of average rating here but its going to be 0 all the time
   const updatedProducts = products.map((product) => {
     const numberofReviews = product.review.length;
     const sumOfRatings = product.review.reduce(
@@ -78,7 +94,16 @@ router.get("/", async (req, res) => {
     };
   });
 
-  res.json(updatedProducts);
+  const totalproducts = await Product.countDocuments();
+  const totalpage = Math.ceil(totalproducts / perpage);
+
+  res.json({
+    products: updatedProducts,
+    totalproducts,
+    totalpage,
+    currentpage: page,
+    postperpage: perpage,
+  });
 });
 
 module.exports = router;
