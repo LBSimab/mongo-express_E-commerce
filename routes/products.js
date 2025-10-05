@@ -64,6 +64,7 @@ router.get("/", async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const perpage = parseInt(req.query.perpage) || 8;
   const querycategory = req.query.category || null;
+  const querysearch = req.query.search || null;
   let query = {};
   if (querycategory) {
     const category = await Category.findOne({ name: querycategory });
@@ -72,6 +73,10 @@ router.get("/", async (req, res) => {
     }
     query.category = category._id;
   }
+  if (querysearch) {
+    query.title = { $regex: querysearch, $options: "i" };
+  }
+
   const products = await Product.find(query)
     .select("-description -seller -category -__v")
     .skip((page - 1) * perpage)
@@ -94,7 +99,7 @@ router.get("/", async (req, res) => {
     };
   });
 
-  const totalproducts = await Product.countDocuments();
+  const totalproducts = await Product.countDocuments(query);
   const totalpage = Math.ceil(totalproducts / perpage);
 
   res.json({

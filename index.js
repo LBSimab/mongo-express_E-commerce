@@ -23,6 +23,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 ///static files i.e images
 app.use("/upload/categories", express.static("upload/category"));
+app.use("/upload/products", express.static("upload/products"));
 //routes
 app.use("/api/users", userRoutes);
 app.use("/api/products", productsRoutes);
