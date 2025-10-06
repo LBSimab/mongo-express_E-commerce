@@ -8,6 +8,7 @@ const categoryRoutes = require("./routes/category");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/auth");
 const winston = require("winston");
+require("winston-mongodb");
 
 PORT = process.env.PORT || 5001;
 //database connection
@@ -27,6 +28,10 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   transports: [
+    new winston.transports.MongoDB({
+      db: "mongodb://localhost:27017/cartwish",
+      level: "error",
+    }),
     new winston.transports.Console({ level: "debug" }),
     new winston.transports.File({
       filename: "logs/errors.log",
