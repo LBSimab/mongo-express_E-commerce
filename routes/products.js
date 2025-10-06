@@ -2,6 +2,8 @@ const express = require("express");
 const authMiddleWare = require("../middleware/auth");
 const multer = require("multer");
 const router = express.Router();
+const fs = require("fs/promises");
+const path = require("path  ");
 const checkRole = require("../middleware/checkRole");
 const Product = require("../models/products");
 const Category = require("../models/category");
@@ -13,6 +15,22 @@ const fileFilter = (req, file, cb) => {
     cb(new Error("inavlid file type. Only JPEG,PNG,GIF are allowed!"), false);
   }
 };
+
+//suggestion api for getting products only by title and id
+
+//also we have to put this suggestion api above /:id api because if we dont
+//the system will not concider suggestion api and goes to /:id and think the "suggestion"in the api is a id string
+router.get("/suggestions", async (req, res) => {
+  const search = req.query.search;
+  const products = Product.find({ title: { $regex: search, $options: "i" } })
+    .select("_id title")
+    .limit(10);
+
+  if (!products) {
+    res.status(404).json({ message: "product not found!" });
+  }
+  res.status(200).json(products);
+});
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "upload/products/");
@@ -110,5 +128,50 @@ router.get("/", async (req, res) => {
     postperpage: perpage,
   });
 });
+//get products  by id
+router.get("/:id", async (req, res) => {
+  const productId = req.params.id;
+  const product = await Product.findById(productId)
+    .populate("seller", "_id name email")
+    .populate("review.user", "_id name email")
+    .select("-category -__v");
 
+  if (!product) {
+    return res.status(404).json({ message: "product not found!!" });
+  }
+
+  res.json(product);
+});
+
+//delete products
+router.delete("/:id", authMiddleWare, async (req, res) => {
+  const productId = req.params.id;
+  const product = Product.findById(productId).select("seller");
+  if (!product) {
+    res.status(404).json({ message: "product not found!" });
+  }
+  if (
+    req.user.role === "admin" ||
+    req.user._id.toString() === product.seller.toString()
+  ) {
+    await product.deleteOne();
+    if (product.images && product.images.length > 0) {
+      product.images.forEach(async (imagename) => {
+        const fullpath = path.join(__dirname, "../upload/products", imagename);
+        try {
+          await fs.unlink(fullpath);
+        } catch (error) {
+          console.error(`error deleting file:${fullpath}`, error);
+        }
+      });
+    }
+    return res
+      .status(200)
+      .json({ message: "product deleted succesful", product: product });
+  }
+
+  return res.status(403).json({
+    message: "access denied | you must be admin or the product seller",
+  });
+});
 module.exports = router;
