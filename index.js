@@ -6,20 +6,13 @@ const app = express();
 const userRoutes = require("./routes/users");
 const categoryRoutes = require("./routes/category");
 const mongoose = require("mongoose");
+const cartRoutes = require("./routes/cart");
 const authRoutes = require("./routes/auth");
 const winston = require("winston");
 require("winston-mongodb");
 
 PORT = process.env.PORT || 5001;
-//database connection
-mongoose
-  .connect("mongodb://localhost:27017/cartwish")
-  .then(() => {
-    console.log("connection was success");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+
 //lets create some logger with winston package
 const logger = winston.createLogger({
   level: "info",
@@ -39,6 +32,37 @@ const logger = winston.createLogger({
     }),
   ],
 });
+//unchaught exceptions
+process.on("uncaughtException", (err) => {
+  logger.error("uncaughtException", err);
+  logger.on("finish", () => {
+    process.exit(1);
+  });
+  logger.end();
+});
+//unhandledrejections
+process.on("unhandledRejection", (err) => {
+  logger.error("unhandledReject ion", err);
+  logger.on("finish", () => {
+    process.exit(1);
+  });
+  logger.end();
+});
+
+//database connection
+mongoose
+  .connect("mongodb://localhost:27017/cartwish")
+  .then(() => {
+    logger.info("connection was success");
+  })
+  .catch((err) => {
+    logger.error("connection failed", err);
+    logger.on("finish", () => {
+      process.exit(1);
+    });
+    logger.end();
+  });
+
 //using built-in middleware for requests and responses
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -51,6 +75,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/cart", cartRoutes);
 
 //addin error logger middleware
 app.use((error, req, res, next) => {
