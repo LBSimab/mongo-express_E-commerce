@@ -17,6 +17,10 @@ router.post("/:productId", authMiddleWare, async (req, res) => {
     return res.status(404).json({ message: "product not found" });
   }
 
+  if (product.stock < quantity) {
+    return res.status(400).json({ message: "stock is not enough" });
+  }
+
   //find the cart if exist if it doesnt we create the cart;
   let cart = await Cart.findOne({ user: userId });
   if (!cart) {
@@ -27,19 +31,35 @@ router.post("/:productId", authMiddleWare, async (req, res) => {
       totaCartPrice: 0,
     });
   }
-  cart.products.push({
-    productId: productId,
-    quantity: quantity,
-    title: product.title,
-    price: product.price,
-    image: product.images[0],
-  });
-  cart.totalproducts = cart.products.reduce((total, products) => {
+
+  const existingProductIndex = cart.products.findIndex(
+    (product) => product.productId.toString() === productId.toString()
+  );
+
+  if (existingProductIndex !== -1) {
+    if (
+      cart.products[existingProductIndex].quantity + quantity >=
+      product.stock
+    ) {
+      return res.status(400).json({ message: "stock is not enough" });
+    }
+
+    cart.products[existingProductIndex].quantity += quantity;
+  } else {
+    cart.products.push({
+      productId: productId,
+      quantity: quantity,
+      title: product.title,
+      price: product.price,
+      image: product.images[0],
+    });
+  }
+  cart.totalproducts = cart.products.reduce((total, product) => {
     return total + product.quantity;
   }, 0);
   cart.totalCartPrice = cart.products.reduce((total, product) => {
     return total + product.price * product.quantity;
-  });
+  }, 0);
   await cart.save();
   res.status(200).json({ message: "cart created successfully", cart });
 });
