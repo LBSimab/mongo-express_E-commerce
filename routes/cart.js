@@ -3,6 +3,7 @@ const authMiddleWare = require("../middleware/auth");
 const Product = require("../models/products");
 const Cart = require("../models/cart");
 const router = express.Router();
+//adding products to the user cart
 router.post("/:productId", authMiddleWare, async (req, res) => {
   const { quantity } = req.body;
   const productId = req.params.productId;
@@ -71,4 +72,113 @@ router.post("/:productId", authMiddleWare, async (req, res) => {
   res.status(200).json({ message: "cart created successfully", cart });
 });
 
+//my cart by the user
+router.get("/myCart", authMiddleWare, async (req, res) => {
+  const cart = await Cart.findOne({ user: req.user._id });
+  if (!cart) {
+    return res.status(404).json({ message: "user has no cart" });
+  }
+  res.status(200).json(cart);
+});
+//incrrease the products in cart
+router.patch("/increase/:productId", authMiddleWare, async (req, res) => {
+  const productId = req.params.productId;
+
+  const product = await Product.findById(productId);
+  //find the current user cart
+
+  const cart = await Cart.findOne({ user: req.user._id });
+  if (!cart) {
+    return res.status(404).json({ message: "cart not found" });
+  }
+  //find the product in cart's products array
+  const index = cart.products.findIndex(
+    (product) => product.productId.toString() === productId
+  );
+  if (index === -1) {
+    return res.status(404).json({ message: "product not found in the cart" });
+  }
+
+  if (cart.products[index].quantity === product.stock) {
+    return res.status(400).json({
+      message: "product ran out of stock , can't increase it anymore",
+    });
+  }
+  //increase the product quantity
+  cart.products[index].quantity += 1;
+  //update totalproducts and totalcartPrice
+  cart.totalproducts += 1;
+  cart.totalCartPrice += product.price;
+  //save the updated cart
+
+  await cart.save();
+  res.json({ message: "product succesfully increased ", cart: cart });
+});
+//decrease the products in cart
+router.patch("/decrease/:productId", authMiddleWare, async (req, res) => {
+  const productId = req.params.productId;
+
+  const product = await Product.findById(productId);
+  //find the current user cart
+
+  const cart = await Cart.findOne({ user: req.user._id });
+  if (!cart) {
+    return res.status(404).json({ message: "cart not found" });
+  }
+  //find the product in cart's products array
+  const index = cart.products.findIndex(
+    (product) => product.productId.toString() === productId
+  );
+  if (index === -1) {
+    return res.status(404).json({ message: "product not found in the cart" });
+  }
+
+  //check for quantity 1 condition
+  if (cart.products[index].quantity > 1) {
+    //decrease the product quantity
+    cart.products[index].quantity -= 1;
+  } else {
+    cart.products.splice(index, 1);
+  }
+  //update totalproducts and totalcartPrice
+  cart.totalproducts -= 1;
+  cart.totalCartPrice -= product.price;
+  //save the updated cart
+
+  await cart.save();
+  res.json({ message: "product succesfully decreased ", cart: cart });
+});
+
+router.patch("/remove/:productId", authMiddleWare, async (req, res) => {
+  const productId = req.params.productId;
+
+  const product = await Product.findById(productId);
+  //find the current user cart
+
+  const cart = await Cart.findOne({ user: req.user._id });
+  if (!cart) {
+    return res.status(404).json({ message: "cart not found" });
+  }
+  //find the product in cart's products array
+  const index = cart.products.findIndex(
+    (product) => product.productId.toString() === productId
+  );
+  if (index === -1) {
+    return res.status(404).json({ message: "product not found in the cart" });
+  }
+  if (
+    cart.products.length === 1 &&
+    cart.products[index].productId.toString() === productId
+  ) {
+    await Cart.findByIdAndDelete(cart._id);
+    return res.json({ message: "cart removed succesfully" });
+  }
+  cart.totalproducts -= cart.products[index].quantity;
+  cart.totalCartPrice -=
+    cart.products[index].quantity * cart.products[index].price;
+  cart.products.splice(index, 1);
+
+  await cart.save();
+  res.json({ message: "product removed succesfully", cart: cart });
+});
 module.exports = router;
