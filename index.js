@@ -8,6 +8,7 @@ const categoryRoutes = require("./routes/category");
 const mongoose = require("mongoose");
 const cartRoutes = require("./routes/cart");
 const authRoutes = require("./routes/auth");
+const orderRoutes = require("./routes/orders");
 const winston = require("winston");
 require("winston-mongodb");
 
@@ -76,6 +77,7 @@ app.use("/api/products", productsRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/orders", orderRoutes);
 
 //addin error logger middleware
 app.use((error, req, res, next) => {
