@@ -97,7 +97,7 @@ router.get("/zarinpal/callback", async (req, res) => {
     //so if the order succesfuly created and everything was fine we dont need the cart right?!
     //i put this part optional but i think after you pay the cart the cart should be deleted!
     if (order) {
-      const result = await cart.delete();
+      const result = await cart.deleteOne();
       console.log("cart deleted succesfuly!", result);
     }
     return res.status(201).json(order);

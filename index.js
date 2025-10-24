@@ -1,4 +1,5 @@
 require("dotenv").config();
+const cors = require("cors");
 require("./config/passport");
 const express = require("express");
 const productsRoutes = require("./routes/products");
@@ -52,7 +53,7 @@ process.on("unhandledRejection", (err) => {
 
 //database connection
 mongoose
-  .connect("mongodb://localhost:27017/cartwish")
+  .connect(process.env.DB)
   .then(() => {
     logger.info("connection was success");
   })
@@ -65,6 +66,7 @@ mongoose
   });
 
 //using built-in middleware for requests and responses
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 ///static files i.e images
