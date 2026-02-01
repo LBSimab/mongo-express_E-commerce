@@ -83,7 +83,7 @@ app.use("/api/orders", orderRoutes);
 
 //addin error logger middleware
 app.use((error, req, res, next) => {
-  console.log("error middleware is running ");
+  console.log(error);
   //log the error in file or database   // cheeky logger
   logger.error(error.message, {
     method: req.method,

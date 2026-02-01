@@ -47,7 +47,7 @@ router.post("/register", async (req, res) => {
   });
   //returing the token and the data of the user
   // i realy shouldnt return the user data like this but its just dev checking
-  res.status(201).json(token, newUser);
+  res.status(201).json({ token: token, user: newUser });
 });
 router.post("/login", async (req, res) => {
   //first we catch credentials and check email if it exist were gud if not we resend wrong cred
@@ -68,7 +68,7 @@ router.post("/login", async (req, res) => {
     role: user.role,
   });
 
-  res.status(200).json(token);
+  res.status(200).json({ token: token });
 });
 
 const generateToken = (data) => {
